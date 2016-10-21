@@ -1,0 +1,9 @@
+{
+    "name": "jonmcpartland/wpmu-postcloner",
+    "description": "Allows posts to be cloned between subsites in a WordPress Multisite",
+    "homepage": "https://github.com/JonMcPartland/wpmu-postcloner.git",
+    "type": "wordpress-plugin",
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
