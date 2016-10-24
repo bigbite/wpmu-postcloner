@@ -91,17 +91,10 @@ class Cloner {
 	 * @return void
 	 */
 	protected function organise_postmeta() {
-		$disallowCopy = [ '_edit_lock', '_edit_last', '_pingme', '_encloseme', ];
-		$disallowCopy = \apply_filters( 'wpmu_postcloner_meta_blacklist', $disallowCopy );
-
 		$postmeta  = \get_post_meta( $this->originalPost->ID );
 		$formatted = [];
 
 		foreach ( $postmeta as $key => $value ) {
-			if ( in_array( $key, $disallowCopy ) ) {
-				continue;
-			}
-
 			if ( is_array( $value ) ) {
 				$value = $value[0];
 			}
@@ -109,7 +102,7 @@ class Cloner {
 			$formatted[ $key ] = $value;
 		}
 
-		$formatted = \apply_filters( 'wpmu_postcloner_metadata', $formatted );
+		$formatted = \apply_filters( 'wpmu_postcloner_origin_postmeta', $formatted, $this->originalPost );
 
 		$this->originalMeta['postmeta'] = $formatted;
 	}
@@ -121,7 +114,7 @@ class Cloner {
 	 */
 	protected function organise_taxonomy() {
 		$taxonomies = \get_object_taxonomies( $this->originalPost->post_type );
-		$taxonomies = \apply_filters( 'wpmu_postcloner_taxonomies', $taxonomies );
+		$taxonomies = \apply_filters( 'wpmu_postcloner_origin_taxonomies', $taxonomies );
 		$formatted  = [];
 
 		foreach ( $taxonomies as $tax ) {
@@ -129,7 +122,7 @@ class Cloner {
 				continue;
 			}
 
-			$formatted[ $tax ] = \apply_filters( 'wpmu_postcloner_taxonomy_terms', $terms, $tax );
+			$formatted[ $tax ] = \apply_filters( 'wpmu_postcloner_origin_terms', $terms, $tax );
 		}
 
 		$this->originalMeta['taxonomy'] = $formatted;
@@ -158,15 +151,9 @@ class Cloner {
 		$postdata = (clone $this->originalPost)->to_array();
 		unset( $postdata['ID'] );
 
-		$newTitle  = "[Cloned from {$this->sourceBlog->blogname}] {$postdata['post_title']}";
-		$overrides = [
-			'post_title'  => $newTitle,
-			'post_status' => 'draft',
-		];
+		$postdata = \apply_filters( 'wpmu_postcloner_target_postdata', $postdata, $this->sourceBlog );
 
-		$overrides = \apply_filters( 'wpmu_postcloner_postdata', $overrides );
-
-		$this->targetID = \wp_insert_post( array_merge( $postdata, $overrides ) );
+		$this->targetID = \wp_insert_post( $postdata );
 	}
 
 	/**
@@ -175,7 +162,13 @@ class Cloner {
 	 * @return void
 	 */
 	protected function migrate_postmeta() {
-		foreach ( $this->originalMeta['postmeta'] as $key => $value ) {
+		$metadata = \apply_filters(
+			'wpmu_postcloner_target_postmeta', $this->originalMeta['postmeta'],
+
+			$this->targetID, $this->targetBlog
+		);
+
+		foreach ( $metadata as $key => $value ) {
 			\update_post_meta( $this->targetID, $key, $value );
 		}
 	}
