@@ -98,6 +98,10 @@ class Cloner {
 		$formatted = [];
 
 		foreach ( $postmeta as $key => $value ) {
+			if ( in_array( $key, $disallowCopy ) ) {
+				continue;
+			}
+
 			if ( is_array( $value ) ) {
 				$value = $value[0];
 			}
@@ -105,7 +109,7 @@ class Cloner {
 			$formatted[ $key ] = $value;
 		}
 
-		$formatted = \apply_filters( 'wpmu_postcloner_meta_whitelist', $formatted );
+		$formatted = \apply_filters( 'wpmu_postcloner_metadata', $formatted );
 
 		$this->originalMeta['postmeta'] = $formatted;
 	}
