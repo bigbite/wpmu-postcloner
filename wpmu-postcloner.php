@@ -22,6 +22,12 @@ new class {
 	protected $siteList;
 
 	public function __construct() {
+		$postType = \get_post_type();
+		// Prevent conflict with ACF
+		if ( ! $postType || in_array( $postType, [ 'acf-field-group', 'acf-field' ] ) ) {
+			return;
+		}
+
 		$this->siteList = \get_sites();
 
 		\add_action( 'post_submitbox_start', function () {
